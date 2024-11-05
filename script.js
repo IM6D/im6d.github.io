@@ -33,26 +33,34 @@ function extractVideoId(url) {
   return match ? match[1] : null;
 }
 
-// Initialize Web Audio API on player ready
+// Initialize Web Audio API when the player is ready
 function onPlayerReady(event) {
-  audioContext = new AudioContext();
+  // Create or resume the AudioContext
+  if (!audioContext || audioContext.state === "closed") {
+    audioContext = new (window.AudioContext || window.webkitAudioContext)();
+  }
+
+  // Use the player's video element as the audio source
   const source = audioContext.createMediaElementSource(event.target.getIframe());
   analyser = audioContext.createAnalyser();
 
   source.connect(analyser);
   analyser.connect(audioContext.destination);
 
+  // Configure analyser
   analyser.fftSize = 256;
   const bufferLength = analyser.frequencyBinCount;
   dataArray = new Uint8Array(bufferLength);
 
+  // Set up canvas for visualizer
   canvas = document.getElementById("visualizer");
   canvasCtx = canvas.getContext("2d");
 
+  // Start the visualizer animation
   drawVisualizer();
 }
 
-// Start visualization when video plays
+// Start the visualization when the video plays
 function onPlayerStateChange(event) {
   if (event.data == YT.PlayerState.PLAYING && audioContext.state === "suspended") {
     audioContext.resume();
@@ -63,9 +71,13 @@ function onPlayerStateChange(event) {
 function drawVisualizer() {
   requestAnimationFrame(drawVisualizer);
 
+  // Get audio data
   analyser.getByteFrequencyData(dataArray);
+
+  // Clear canvas
   canvasCtx.clearRect(0, 0, canvas.width, canvas.height);
 
+  // Visualize frequency data
   const barWidth = canvas.width / dataArray.length;
   let barHeight;
   let x = 0;
