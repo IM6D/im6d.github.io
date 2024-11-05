@@ -1,83 +1,58 @@
-let player;
 let audioContext;
 let analyser;
 let dataArray;
 let canvas;
 let canvasCtx;
+let audio;
 
-// Load YouTube video
-function loadVideo() {
-  const url = document.getElementById("youtube-url").value;
-  const videoId = extractVideoId(url);
+// Load Audio
+function loadAudio() {
+  const url = document.getElementById("audio-url").value;
 
-  if (videoId) {
-    if (player) {
-      player.loadVideoById(videoId);
-    } else {
-      player = new YT.Player("player", {
-        videoId: videoId,
-        events: {
-          onReady: onPlayerReady,
-          onStateChange: onPlayerStateChange,
-        },
-      });
-    }
-  } else {
-    alert("Invalid YouTube URL. Please try again.");
+  if (audio) {
+    audio.pause(); // Pause any previous audio
   }
+
+  // Get audio element and set new source
+  audio = document.getElementById("audio-player");
+  audio.src = url;
+  audio.crossOrigin = "anonymous"; // Enable cross-origin for testing if needed
+  audio.load();
+  audio.play();
+
+  setupAudioContext();
 }
 
-// Extract video ID from URL
-function extractVideoId(url) {
-  const match = url.match(/(?:https?:\/\/)?(?:www\.)?youtube\.com\/watch\?v=([a-zA-Z0-9_-]+)/);
-  return match ? match[1] : null;
-}
-
-// Initialize Web Audio API when the player is ready
-function onPlayerReady(event) {
-  // Create or resume the AudioContext
-  if (!audioContext || audioContext.state === "closed") {
+// Set up Audio Context for Web Audio API
+function setupAudioContext() {
+  if (!audioContext) {
     audioContext = new (window.AudioContext || window.webkitAudioContext)();
   }
 
-  // Use the player's video element as the audio source
-  const source = audioContext.createMediaElementSource(event.target.getIframe());
+  const source = audioContext.createMediaElementSource(audio);
   analyser = audioContext.createAnalyser();
 
   source.connect(analyser);
   analyser.connect(audioContext.destination);
 
-  // Configure analyser
   analyser.fftSize = 256;
   const bufferLength = analyser.frequencyBinCount;
   dataArray = new Uint8Array(bufferLength);
 
-  // Set up canvas for visualizer
   canvas = document.getElementById("visualizer");
   canvasCtx = canvas.getContext("2d");
 
-  // Start the visualizer animation
   drawVisualizer();
-}
-
-// Start the visualization when the video plays
-function onPlayerStateChange(event) {
-  if (event.data == YT.PlayerState.PLAYING && audioContext.state === "suspended") {
-    audioContext.resume();
-  }
 }
 
 // Draw the audio visualizer
 function drawVisualizer() {
   requestAnimationFrame(drawVisualizer);
 
-  // Get audio data
   analyser.getByteFrequencyData(dataArray);
 
-  // Clear canvas
   canvasCtx.clearRect(0, 0, canvas.width, canvas.height);
 
-  // Visualize frequency data
   const barWidth = canvas.width / dataArray.length;
   let barHeight;
   let x = 0;
