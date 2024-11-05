@@ -3,17 +3,18 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Audio Visualizer Test</title>
+  <title>YouTube Audio Visualizer</title>
   <link rel="stylesheet" href="style.css">
+  <script src="https://www.youtube.com/iframe_api"></script>
 </head>
 <body>
   <div id="input-container">
-    <input type="text" id="audio-url" placeholder="Enter Audio URL" />
-    <button onclick="loadAudio()">Load Audio</button>
+    <input type="text" id="youtube-url" placeholder="Enter YouTube URL" />
+    <button onclick="loadVideo()">Load Video</button>
   </div>
 
   <div id="player-container">
-    <audio id="audio-player" controls></audio>
+    <div id="player"></div>
     <canvas id="visualizer" width="560" height="315"></canvas>
   </div>
 
